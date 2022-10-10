@@ -1,7 +1,10 @@
+สร้าง folder ชื่อว่า dist
 เปิด folder backend ด้วย vscode
 	เปิด teminal
-	ใช้คำสั่ง docker-compose up -d (อย่าลืมปิด docker ตัวอื่นก่อน)
+	ใช้คำสั่ง npm install
 	ใช้คำสั่ง npm run dev เปิดตัว backend
+ติดตั้ง docker
+	ใช้คำสั่ง docker-compose up -d (อย่าลืมปิด docker ตัวอื่นก่อน)
 เปิด postman เพื่อดู path API
 	กด import เลือกไฟล์ backend -> web_book.postman_collection.json
 วิธีเข้า database และติดตั้งข้อมูลใน database
