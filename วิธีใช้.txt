@@ -1,0 +1,14 @@
+เปิด folder backend ด้วย vscode
+	เปิด teminal
+	ใช้คำสั่ง docker-compose up -d (อย่าลืมปิด docker ตัวอื่นก่อน)
+	ใช้คำสั่ง npm run dev เปิดตัว backend
+เปิด postman เพื่อดู path API
+	กด import เลือกไฟล์ backend -> web_book.postman_collection.json
+วิธีเข้า database และติดตั้งข้อมูลใน database
+	เปิด http://localhost:8080/
+	user: root
+	password: mypassword
+	กดเมนู Import เลือกไฟล์ backend -> web_books.sql
+	กดปิด checkbox Enable foreign key checks
+	กด go
+ทดลองใช้ API ใน postman
