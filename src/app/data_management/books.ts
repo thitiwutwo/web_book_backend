@@ -2,7 +2,8 @@ import { Router } from "express";
 import { book } from "../../models";
 import { book_author } from "../../models";
 import { author } from "../../models";
-
+import { publisher } from "../../models";
+import { book_language } from "../../models";
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const booksRouter: Router = Router();
@@ -43,6 +44,48 @@ booksRouter.get("/", async function (req, res) {
   }
 });
 
+booksRouter.get("/count", async function (req, res) {
+  try {
+    let value = await book.count();
+
+    return res.json({ status: true, data: value });
+  } catch (e: any) {
+    return res.json({
+      status: false,
+      data: "error",
+      errorDetail: e.toString(),
+    });
+  }
+});
+
+booksRouter.get("/overall/:page/:topic/:order", async function (req, res) {
+  try {
+    book.hasMany(book_author, {foreignKey: 'book_id'});
+    book_author.belongsTo(book, {foreignKey: 'book_id'});
+    book_author.belongsTo(author, {foreignKey: 'author_id'});
+    book.belongsTo(publisher, {foreignKey: 'publisher_id'});
+    let value = await book.findAll({
+      include: [
+        {model: book_author, include:[{model: author}]},
+        {model: publisher},
+      ],
+      offset: (parseInt(req.params.page)-1)*10,
+      limit: 10,
+      order: [
+        [req.params.topic, req.params.order],
+      ]
+    });
+
+    return res.json({ status: true, data: value });
+  } catch (e: any) {
+    return res.json({
+      status: false,
+      data: "error",
+      errorDetail: e.toString(),
+    });
+  }
+});
+
 booksRouter.get("/getByLang/:lang", async function (req, res) {
   try {
     let value = await book.findAll({
@@ -63,7 +106,20 @@ booksRouter.get("/getByLang/:lang", async function (req, res) {
 
 booksRouter.get("/get/:id", async function (req, res) {
   try {
+    book.hasMany(book_author, {foreignKey: 'book_id'});
+    book_author.belongsTo(book, {foreignKey: 'book_id'});
+    author.hasMany(book_author, {foreignKey: 'author_id'});
+    book_author.belongsTo(author, {foreignKey: 'author_id'});
+    publisher.hasMany(book, {foreignKey: 'publisher_id'});
+    book.belongsTo(publisher, {foreignKey: 'publisher_id'});
+    book.belongsTo(book_language,{foreignKey: 'language_id'})
     let value = await book.findOne({
+      include: [
+        {model: book_author, include:[{model: author, required: false}]},
+        {model: book_language},
+        {model: publisher},
+        // {model: author},
+      ],
       where: {
         book_id: req.params.id,
       },
@@ -93,12 +149,15 @@ booksRouter.get("/getAll", async function (req, res) {
   }
 });
 
-booksRouter.get("/getAll/:start", async function (req, res) {
+booksRouter.get("/getByPage/:page/:topic/:order", async function (req, res) {
   try {
     let value = await book.findAll({
-      offset: parseInt(req.params.start),
+      offset: (parseInt(req.params.page)-1)*10,
       limit: 10,
-    });
+      order: [
+        [req.params.topic, req.params.order],
+      ]
+    },);
 
     return res.json({ status: true, data: value });
   } catch (e: any) {
@@ -127,11 +186,20 @@ booksRouter.get("/getAll/:start/:max", async function (req, res) {
   }
 });
 
-booksRouter.get("/search", async function (req, res) {
+booksRouter.get("/search/:keyword", async function (req, res) {
   try {
-    let keyword:string = req.body.keyword;
+    book.hasMany(book_author, {foreignKey: 'book_id'});
+    book_author.belongsTo(book, {foreignKey: 'book_id'});
+    book_author.belongsTo(author, {foreignKey: 'author_id'});
+    book.belongsTo(publisher, {foreignKey: 'publisher_id'});
+    let keyword:string = req.params.keyword;
     let value = await book.findAll({
-      where: { title: {[Op.like]: keyword +'%'} },
+      include: [
+        {model: book_author, include:[{model: author}]},
+        {model: publisher},
+      ],
+      limit: 10,
+      where: { title: {[Op.like]: keyword +'%'}},
     });
 
     return res.json({ status: true, data: value });
@@ -213,7 +281,7 @@ booksRouter.post("/", upload.single('book_img'), async function (req:any, res:an
     let num_pages: string = req.body.num_pages;
     let publication_date: string = req.body.publication_date;
     let publisher_id: string = req.body.publisher_id;
-    let book_img: string = req.file.filename;
+    let book_img_name: string = req.body.book_img_name;
     let borrowed: string = "0";
     let author_id: any = req.body.author_id; 
     
@@ -224,7 +292,7 @@ booksRouter.post("/", upload.single('book_img'), async function (req:any, res:an
       num_pages: parseInt(num_pages),
       publication_date: publication_date,
       publisher_id: parseInt(publisher_id),
-      book_img: book_img,
+      book_img: book_img_name,
       borrowed: parseInt(borrowed)
     });
     let author = await book_author.create({ 
@@ -233,21 +301,23 @@ booksRouter.post("/", upload.single('book_img'), async function (req:any, res:an
     });
     return res.json({ status: true, data: objbook, author });
   } catch (e: any) {
-    return res.json({ status: false, data: "error", errorDetail: e.toString() });
+    return res.status(201).json({ status: false, data: "error", errorDetail: e.toString() });
   }
 });
 
 // put or update
 booksRouter.put("/:id", upload.single('book_img'), async function (req:any, res:any) {
   try {
+    let book_id = req.params.id;
     let title: string = req.body.title;
     let isbn13: string = req.body.isbn13;
     let language_id: string = req.body.language_id;
     let num_pages: string = req.body.num_pages;
     let publication_date: string = req.body.publication_date;
     let publisher_id: string = req.body.publisher_id;
-    let book_img: string = req.file.filename;
+    let book_img_name: string = req.body.book_img_name;
     let borrowed: string = "0";
+    let author_id: any = req.body.author_id; 
 
     await book.update(
       {
@@ -257,30 +327,37 @@ booksRouter.put("/:id", upload.single('book_img'), async function (req:any, res:
         num_pages: parseInt(num_pages),
         publication_date: publication_date,
         publisher_id: parseInt(publisher_id),
-        book_img: book_img,
+        book_img: book_img_name,
         borrowed: parseInt(borrowed)
       },
-      { where: { book_id: req.params.id } }
+      { where: { book_id: book_id } }
     );
-    let mybook = await book.findByPk(req.params.id);
+    await book_author.update({ 
+      book_id: book_id,
+      author_id: author_id,
+    },{ where: { book_id: book_id } }
+    );
+    let mybook = await book.findByPk(book_id);
 
     return res.json({ status: true, data: mybook });
   } catch (e: any) {
-    res.json({ status: false, data: "error", errorDetail: e.toString() });
+    return res.status(201).json({ status: false, data: "error", errorDetail: e.toString() });
   }
 });
 
 // delete
-booksRouter.delete("/", async function (req, res) {
+booksRouter.delete("/:book_id", async function (req, res) {
   try {
-    let objbook = await book.destroy({ where: { book_id: req.body.id } });
+    let book_id = req.params.book_id;
+    let objbook = await book.destroy({ where: { book_id: book_id } });
+    let objbook_author = await book_author.destroy({ where: { book_id: book_id} });
     if (objbook) {
       return res.json({ status: true, data: "success" });
     } else {
-      return res.json({ status: false, data: "fail or not found" });
+      return res.status(201).json({ status: false, data: "fail or not found" });
     }
   } catch (e: any) {
-    res.json({ status: false, data: "error", errorDetail: e.toString() });
+    res.status(201).json({ status: false, data: "error", errorDetail: e.toString() });
   }
 });
 

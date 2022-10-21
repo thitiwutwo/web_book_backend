@@ -37,7 +37,7 @@ usersRouter.post('/', async function(req, res){
             where: { username: username}
         });
         if(user){
-            return res.json({status: false, data: "username already used"});
+            return res.status(201).json({status: false, data: "username already used"});
         }else{
             const bcrypt = require('bcryptjs');
             const salt = await bcrypt.genSalt(10);

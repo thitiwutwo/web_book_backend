@@ -18,20 +18,20 @@ CREATE TABLE users (
 CREATE TABLE author (
     author_id INT NOT NULL AUTO_INCREMENT,
     author_name VARCHAR(400),
-    CONSTRAINT pk_author PRIMARY KEY (author_id)
+    PRIMARY KEY (author_id)
 );
 
 CREATE TABLE publisher (
     publisher_id INT NOT NULL AUTO_INCREMENT,
     publisher_name VARCHAR(400),
-    CONSTRAINT pk_publisher PRIMARY KEY (publisher_id)
+    PRIMARY KEY (publisher_id)
 );
 
 CREATE TABLE book_language (
     language_id INT NOT NULL AUTO_INCREMENT,
     language_code VARCHAR(8),
     language_name VARCHAR(50),
-    CONSTRAINT pk_language PRIMARY KEY (language_id)
+    PRIMARY KEY (language_id)
 );
 
 CREATE TABLE book (
@@ -44,17 +44,12 @@ CREATE TABLE book (
     publisher_id INT,
     book_img VARCHAR(100),
     borrowed TINYINT(1) NOT NULL DEFAULT 0,
-    CONSTRAINT pk_book PRIMARY KEY (book_id),
-    CONSTRAINT fk_book_lang FOREIGN KEY (language_id) REFERENCES book_language (language_id),
-    CONSTRAINT fk_book_pub FOREIGN KEY (publisher_id) REFERENCES publisher (publisher_id)
+    PRIMARY KEY (book_id)
 );
 
 CREATE TABLE book_author (
-    book_id INT NOT NULL AUTO_INCREMENT,
-    author_id INT,
-    CONSTRAINT pk_bookauthor PRIMARY KEY (book_id, author_id),
-    CONSTRAINT fk_ba_book FOREIGN KEY (book_id) REFERENCES book (book_id),
-    CONSTRAINT fk_ba_author FOREIGN KEY (author_id) REFERENCES author (author_id)
+    book_id INT,
+    author_id INT
 );
 
 CREATE TABLE oauth_scopes (
@@ -146,16 +141,22 @@ INSERT INTO oauth_clients (id, name, client_id, client_secret, redirect_uri, gra
 INSERT INTO oauth_scopes (id, scope, is_default) VALUES (1, 'profile', NULL);
 
 INSERT INTO borrow (borrow_id, book_id, user_id, date_borrow, is_return, date_return) VALUES 
-(1, 1, 3, '2022-10-7', 1, '2022-10-7'),
-(2, 1, 3, '2022-10-7', 0, NULL),
-(3, 10, 3, '2022-10-8', 0, NULL),
-(4, 68, 3, '2022-10-8', 0, NULL),
-(5, 10023, 3, '2022-10-8', 0, NULL);
+(1, 1, 4, '2022-10-07', 1, '2022-10-15'),
+(2, 1, 4, '2022-10-07', 1, NULL),
+(3, 10, 4, '2022-10-08', 0, NULL),
+(4, 68, 3, '2022-10-08', 0, NULL),
+(5, 10023, 3, '2022-10-18', 1, '2022-10-18'),
+(6, 2, 3, '2022-10-18', 0, NULL),
+(7, 3, 4, '2022-10-18', 1, '2022-10-20'),
+(8, 1, 4, '2022-10-18', 1, '2022-10-20'),
+(9, 6, 3, '2022-10-19', 1, '2022-10-20'),
+(10, 9, 4, '2022-10-19', 0, NULL);
 
 INSERT INTO users (id, username, password, scope, name, role_id) VALUES 
 (1, 'admin', '$2a$10$FvNj6c9qdzuFhDDuFMzaBeTV4NLQY8xRpCi/pqEEFIsbRLL5MPvqq','profile' , 'admin', 0),
 (2, 'sam242', '$2a$10$nQKwuir/0QPq9XeLVcyJeeX7lUU3Yo1dNU4VP9ysMDHo3iTH/JQu6', 'profile', 'Thitiwut Wongsa', 0),
-(3, 'aum101', '$2a$10$t8a54hfk873xXeJylJ53Fe0TYHWIODfM75gmgEo5ImB7vkY6J8CKa', 'profile', 'Supakorn Pungko', 0);
+(3, 'aum101', '$2a$10$t8a54hfk873xXeJylJ53Fe0TYHWIODfM75gmgEo5ImB7vkY6J8CKa', 'profile', 'Supakorn Pungko', 1),
+(4, 'test100', '$2a$10$NXOosPFyihsvTuaS2BlJ3uxHLFWg0nMJhJxStWwP/Ro49sZxh3yuu', 'profile', 'Hiri Otappa', 1);
 
 INSERT INTO author (author_name, author_id) VALUES
 ('A. Bartlett Giamatti', 1),
